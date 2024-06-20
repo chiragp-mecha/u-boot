@@ -1,0 +1,10 @@
+menu "fuel gauge support"
+
+config BQ27XXX
+        bool "Enable bq27xxx drivers"
+        #depends on DM_I2C 
+	default y 
+        help
+           enable bq27xxx fuel gauge driver.
+
+endmenu

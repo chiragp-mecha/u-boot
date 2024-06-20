@@ -20,6 +20,8 @@
 #include <asm/io.h>
 //#include "../common/tcpc.h"
 #include <usb.h>
+#include <power/bq27xxx_fg.h>
+
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -311,12 +313,42 @@ int board_ehci_usb_phy_mode(struct udevice *dev)
 
 #endif
 
+int power_fg_i2c_init_update(uint8_t i2c_bus, uint8_t addr)
+{  printf("\nFuel-Gauge: Fuel-Gauge Configuration started ... \n");
+	struct udevice *i2c_dev;
+	struct udevice *bus;
+	int ret;
+	uint8_t valb;
+
+	ret = uclass_get_device_by_seq(UCLASS_I2C, i2c_bus, &bus);
+	if (ret) {
+		printf("%s: Can't find bus\n", __func__);
+		return -EINVAL;
+	}
+
+	ret = dm_i2c_probe(bus, addr, 0, &i2c_dev);
+	if (ret) {
+		printf("%s: Can't find device id=0x%x\n",
+			__func__, addr);
+		return -ENODEV;
+	}
+
+ 	if(i2c_dev == NULL) {
+		printf("Err:i2c bus handler not found\n");
+		return -ENODEV;
+	}
+
+	power_fg_init_update(i2c_bus, i2c_dev);
+	
+	return 0;
+}
+
 int board_init(void)
 {
 #ifdef CONFIG_USB_TCPC
 	setup_typec();
 #endif
-
+	
 	if (IS_ENABLED(CONFIG_FEC_MXC))
 		setup_fec();
 
@@ -328,11 +360,16 @@ int mmc_map_to_kernel_blk(int dev_no)
 	return dev_no;
 }
 
+
+
 int board_late_init(void)
 {
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_env_init();
 #endif
+
+	// initialize fuel gauge
+	power_fg_i2c_init_update(2, 0x55);
 
 	if (IS_ENABLED(CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG)) {
 		env_set("board_name", "Comet-m");
