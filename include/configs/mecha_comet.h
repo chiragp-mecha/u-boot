@@ -113,8 +113,12 @@
 	"fdt_addr_r=0x43000000\0"			\
 	"fdt_addr=0x43000000\0"			\
 	"fdt_high=0xffffffffffffffff\0"		\
+	"fdt_resize_ov=fdt resize 8192\0" 	\
 	"boot_fit=no\0" \
 	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
+	"set_fdtovaddr = setexpr fdtovaddr ${fdt_addr} + C0000\0" \
+	"fdt_apply_addr_ov=fdt apply ${fdtovaddr}\0" \
+	"fdtaddr_ov=fdt addr ${fdt_addr}\0" \
 	"bootm_size=0x10000000\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=1\0" \
@@ -125,12 +129,22 @@
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr_r} ${fdtfile}\0" \
+	"overlayfile=overlays.txt\0" \
+	"fdt_env_ov=load mmc ${mmcdev}:${mmcpart} ${fdtovaddr} ${overlayfile} && env import -t ${fdtovaddr} ${filesize}\0" \
+	"loadfdt_ov=for overlay_file in ${fdt_overlays}; do echo Applying DTBO....; load mmc ${mmcdev}:${mmcpart} ${fdtovaddr} ${overlay_file}; done\0"\
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"if test ${boot_fit} = yes || test ${boot_fit} = try; then " \
 			"bootm ${loadaddr}; " \
 		"else " \
 			"if run loadfdt; then " \
+							"setexpr fdtovaddr ${fdt_addr} + C0000;" \
+                        	"run fdtaddr_ov;"\
+                        	"run fdt_resize_ov;"\
+                        	"run fdt_env_ov;" \
+                        	"run loadfdt_ov;" \
+                        	"run fdt_apply_addr_ov;" \
+							"run loadimage; " \
 				"booti ${loadaddr} - ${fdt_addr_r}; " \
 			"else " \
 				"echo WARN: Cannot load the DT; " \
