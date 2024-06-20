@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
  * Copyright 2020,2022 NXP
  */
@@ -54,7 +54,7 @@
 		regulator-name = "VSD_3V3";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
+		//gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
 		off-on-delay-us = <20000>;
 		enable-active-high;
 	};
@@ -141,7 +141,7 @@
 		compatible = "raydium,rm67199";
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_mipi_dsi_en>;
-		reset-gpio = <&gpio1 8 GPIO_ACTIVE_LOW>;
+		//reset-gpio = <&gpio1 8 GPIO_ACTIVE_LOW>;
 		dsi-lanes = <4>;
 		video-mode = <2>;	/* 0: burst mode
 					 * 1: non-burst mode with sync event
@@ -149,13 +149,37 @@
 					 */
 		panel-width-mm = <68>;
 		panel-height-mm = <121>;
-		status = "okay";
+		status = "disabled";
 
 		port {
 			rm67191_from_dsim: endpoint {
 				remote-endpoint = <&dsim_to_rm67191>;
 			};
 		};
+	};
+
+	st7701_panel {
+	    compatible = "sitronix,st7701s";
+	    pinctrl-names = "default";
+	    pinctrl-0 = <&pinctrl_mipi_dsi>;
+	    /*reset-gpio = <&gpio5 29 GPIO_ACTIVE_HIGH>;*/
+	    /* continue to use the GPOI from the connector */
+	    reset-gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
+	    backlight-gpio = <&gpio5 3 GPIO_ACTIVE_LOW>;
+	    dsi-lanes = <2>;
+	    video-mode = <2>;       /* 0: burst mode
+	                            * 1: non-burst mode with sync event
+	                            * 2: non-burst mode with sync pulse
+	                            */
+	    panel-width-mm = <60>;
+	    panel-height-mm = <60>;
+	    status = "okay";
+
+	    port {
+	            st7701_from_dsim: endpoint {
+	                    remote-endpoint = <&dsim_to_st7701>;
+	        };
+	    };
 	};
 };
 
@@ -346,7 +370,7 @@
 		reg = <0x3d>;
 		adi,addr-cec = <0x3c>;
 		adi,dsi-lanes = <4>;
-		status = "okay";
+		status = "disabled";
 
 		port {
 			adv7535_from_dsim: endpoint {
@@ -523,6 +547,18 @@
 			remote-endpoint = <&rm67191_from_dsim>;
 		};
 	};
+	port@3 {
+		dsim_to_st7701: endpoint {
+			remote-endpoint = <&st7701_from_dsim>;
+		};
+	};
+};
+
+&pwm3 {
+	#pwm-cells = <2>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_pwm3>;
+	status = "okay";
 };
 
 &iomuxc {
@@ -532,6 +568,20 @@
 			MX8MM_IOMUXC_ECSPI2_MOSI_ECSPI2_MOSI		0x82
 			MX8MM_IOMUXC_ECSPI2_MISO_ECSPI2_MISO		0x82
 		>;
+	};
+
+	pinctrl_mipi_dsi: mipi_dsi_en {
+		fsl,pins = <
+				MX8MM_IOMUXC_SD2_RESET_B_GPIO2_IO19             0x19
+				MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8               0x19
+				MX8MM_IOMUXC_SPDIF_TX_GPIO5_IO3                 0x19
+			>;
+	};
+
+	pinctrl_pwm3: pwm3grp {
+		fsl,pins = <
+				MX8MM_IOMUXC_SPDIF_TX_PWM3_OUT                  0x06
+			>;
 	};
 
 	pinctrl_ecspi2_cs: ecspi2csgrp {

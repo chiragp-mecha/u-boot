@@ -75,6 +75,7 @@ obj-$(CONFIG_VIDEO_VADC) += mxc_vadc.o
 obj-$(CONFIG_VIDEO_CSI) += mxc_csi.o
 obj-$(CONFIG_VIDEO_PXP) += mxc_pxp.o
 obj-$(CONFIG_VIDEO_GIS) += mxc_gis.o
+obj-$(CONFIG_VIDEO_LCD_ST7701) += st7701.o
 
 obj-y += bridge/
 obj-y += sunxi/
