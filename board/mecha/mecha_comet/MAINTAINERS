@@ -1,0 +1,7 @@
+Mecha-Comet-M-Gen1 Device
+M:	Chirag Parmar <chiragp@mechasystems.com>
+S:	Maintained
+F:	board/mecha/mecha_comet/
+F:	include/configs/mecha_comet.h
+F:	configs/mecha_cometm_gen1_defconfig
+

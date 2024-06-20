@@ -1,0 +1,18 @@
+if TARGET_MECHA_COMET || TARGET_IMX8MM_DDR4_EVK
+
+config SYS_BOARD
+	default "mecha_comet"
+
+config SYS_VENDOR
+	default "mecha"
+
+config SYS_CONFIG_NAME
+	default "mecha_comet"
+
+config IMX_CONFIG
+	default "board/mecha/mecha_comet/imximage-8mm.cfg"
+
+config IMX8M_1G_MEMORY
+	bool "imx8m 1GB memory size"
+
+endif
