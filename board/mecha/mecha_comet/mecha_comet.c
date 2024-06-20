@@ -21,12 +21,15 @@
 //#include "../common/tcpc.h"
 #include <usb.h>
 #include <power/bq27xxx_fg.h>
+#include <splash.h>
 
 
 DECLARE_GLOBAL_DATA_PTR;
 
 #define UART_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_FSEL1)
 #define WDOG_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
+
+# define DEVICE_SHUTDOWN_BATTERY_PERCENT 5
 
 static iomux_v3_cfg_t const uart_pads[] = {
 	IMX8MM_PAD_UART2_RXD_UART2_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
@@ -338,9 +341,46 @@ int power_fg_i2c_init_update(uint8_t i2c_bus, uint8_t addr)
 		return -ENODEV;
 	}
 
-	power_fg_init_update(i2c_bus, i2c_dev);
-	
-	return 0;
+	return power_fg_init_update(i2c_bus, i2c_dev);
+}
+
+int show_boot_logo(void)
+{
+		run_command("mmc dev 2", 0);
+		run_command("mmc rescan", 0);
+		run_command("load mmc 2 ${loadaddr} splash/logo.bmp", 0);
+		run_command("bmp display ${loadaddr}", 0);
+}
+
+int show_low_battery_logo(void)
+{
+		printf("powering down in 5 seconds\n");
+
+		int i;
+		run_command("mmc dev 2", 0); run_command("mmc rescan", 0);
+
+		for (i=0;i<4;i++) 
+		{
+		run_command("load mmc 2 ${loadaddr} splash/low-bat1.bmp", 0);
+		run_command("bmp display ${loadaddr}", 0);
+		mdelay(300);
+		run_command("load mmc 2 ${loadaddr} splash/low-bat2.bmp", 0);
+		run_command("bmp display ${loadaddr}", 0);
+		mdelay(300);
+		run_command("load mmc 2 ${loadaddr} splash/low-bat3.bmp", 0);
+		run_command("bmp display ${loadaddr}", 0);
+		mdelay(300);
+		run_command("load mmc 2 ${loadaddr} splash/low-bat4.bmp", 0);
+		run_command("bmp display ${loadaddr}", 0);
+		mdelay(300);
+		run_command("load mmc 2 ${loadaddr} splash/low-bat5.bmp", 0);
+		run_command("bmp display ${loadaddr}", 0);
+		mdelay(300);
+		run_command("load mmc 2 ${loadaddr} splash/low-bat6.bmp", 0);
+		run_command("bmp display ${loadaddr}", 0); 
+		mdelay(300);
+		}
+
 }
 
 int board_init(void)
@@ -369,7 +409,30 @@ int board_late_init(void)
 #endif
 
 	// initialize fuel gauge
-	power_fg_i2c_init_update(2, 0x55);
+	int ret = power_fg_i2c_init_update(2, 0x55);
+	bool is_battery_below_threshold = false;
+
+	if (!(ret < 0)) {
+		bq27xxx_battery *bat;
+		power_read_battery_property(bat);
+		printf("battery percentage: %d\n", bat->soc);
+
+		// check if battery % is below threshold
+		if (bat->soc < DEVICE_SHUTDOWN_BATTERY_PERCENT && bat->supply_status != POWER_SUPPLY_STATUS_CHARGING) {
+			is_battery_below_threshold = true;
+
+			printf("powering down in 5 seconds\n");
+			show_low_battery_logo();
+			memset(0x30370038, 0x60, 1);
+		}
+
+		else {
+			printf("battery is below threshold: %d\n", is_battery_below_threshold);
+			show_boot_logo();
+
+		}
+	}
+
 
 	if (IS_ENABLED(CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG)) {
 		env_set("board_name", "Comet-m");
