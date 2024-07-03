@@ -109,6 +109,10 @@
 	"splashdevpart=2:1\0" \
 	"splashfile=logo.bmp\0" \
 	"splashsource=mmc_fs\0" \
+	"rootfs_part=/dev/mmcblk2p2\0" \
+	"kernel_comp_addr_r=0x53800000\0" \
+	"kernel_comp_size=0x12800000\0" \
+	"fdt_file=imx8mm-mecha-comet-m-gen1.dtb\0" \
 	"console=ttymxc1,115200\0" \
 	"fdt_addr_r=0x43000000\0"			\
 	"fdt_addr=0x43000000\0"			\
