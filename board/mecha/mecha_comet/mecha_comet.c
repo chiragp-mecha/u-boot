@@ -344,6 +344,22 @@ int power_fg_i2c_init_update(uint8_t i2c_bus, uint8_t addr)
 	return power_fg_init_update(i2c_bus, i2c_dev);
 }
 
+void board_late_mmc_env_init(void)
+{
+	char cmd[32];
+	char mmcblk[32];
+	u32 dev_no = mmc_get_env_dev();
+
+	env_set_ulong("mmcdev", dev_no);
+
+	/* Set mmcblk env */
+	sprintf(mmcblk, "/dev/mmcblk%dp2 rootwait rw", mmc_map_to_kernel_blk(dev_no));
+	env_set("mmcroot", mmcblk);
+
+	sprintf(cmd, "mmc dev %d", dev_no);
+	run_command(cmd, 0);
+}
+
 int show_boot_logo(void)
 {
 		run_command("mmc dev 2", 0);
