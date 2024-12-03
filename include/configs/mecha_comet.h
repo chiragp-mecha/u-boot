@@ -3,8 +3,8 @@
  * Copyright 2019 NXP
  */
 
-#ifndef __IMX8MM_EVK_H
-#define __IMX8MM_EVK_H
+#ifndef __MECHA_COMET_H
+#define __MECHA_COMET_H
 
 #include <linux/sizes.h>
 #include <linux/stringify.h>
@@ -114,15 +114,20 @@
 	"kernel_comp_size=0x12800000\0" \
 	"fdt_file=imx8mm-mecha-comet-m-gen1.dtb\0" \
 	"console=ttymxc1,115200\0" \
+	"fdt_addr=0x43000000\0"	\
 	"fdt_addr_r=0x43000000\0"			\
-	"fdt_addr=0x43000000\0"			\
+	"fdt addr ${fdt_addr_r};"\
 	"fdt_high=0xffffffffffffffff\0"		\
 	"fdt_resize_ov=fdt resize 8192\0" 	\
+"fdt_overlays_path=overlays.txt\0" \
+"fdt_overlay_size=0xC0000\0" \
+"set_fdt_overlay_addr=setexpr fdt_overlay_addr ${fdt_addr_r} + ${fdt_overlay_size}\0" \
+"set_fdt_overlays_env=load mmc ${mmcdev}:${mmcpart} ${fdt_overlay_addr} ${fdt_overlays_path}\0" \
+"import_fdt_overlays_env=env import -t ${fdt_overlay_addr} ${fdt_overlay_size}\0" \
+"load_fdt_overlays=for fdt_overlay in ${fdt_overlays}; do echo Device-Tree: Applying overlay ... ${fdt_overlay}; load mmc ${mmcdev}:${mmcpart} ${fdt_overlay_addr} ${fdt_overlay}; fdt apply ${fdt_overlay_addr}; done\0" \
+"apply_fdt_overlays=run set_fdt_overlay_addr;run set_fdt_overlays_env;run import_fdt_overlays_env;run load_fdt_overlays;" \
 	"boot_fit=no\0" \
 	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
-	"set_fdtovaddr = setexpr fdtovaddr ${fdt_addr} + C0000\0" \
-	"fdt_apply_addr_ov=fdt apply ${fdtovaddr}\0" \
-	"fdtaddr_ov=fdt addr ${fdt_addr}\0" \
 	"bootm_size=0x10000000\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=1\0" \
@@ -133,22 +138,12 @@
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr_r} ${fdtfile}\0" \
-	"overlayfile=overlays.txt\0" \
-	"fdt_env_ov=load mmc ${mmcdev}:${mmcpart} ${fdtovaddr} ${overlayfile} && env import -t ${fdtovaddr} ${filesize}\0" \
-	"loadfdt_ov=for overlay_file in ${fdt_overlays}; do echo Applying DTBO....; load mmc ${mmcdev}:${mmcpart} ${fdtovaddr} ${overlay_file}; done\0"\
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"if test ${boot_fit} = yes || test ${boot_fit} = try; then " \
 			"bootm ${loadaddr}; " \
 		"else " \
 			"if run loadfdt; then " \
-							"setexpr fdtovaddr ${fdt_addr} + C0000;" \
-                        	"run fdtaddr_ov;"\
-                        	"run fdt_resize_ov;"\
-                        	"run fdt_env_ov;" \
-                        	"run loadfdt_ov;" \
-                        	"run fdt_apply_addr_ov;" \
-							"run loadimage; " \
 				"booti ${loadaddr} - ${fdt_addr_r}; " \
 			"else " \
 				"echo WARN: Cannot load the DT; " \
@@ -196,10 +191,10 @@
 
 #define CFG_SYS_SDRAM_BASE           0x40000000
 #define PHYS_SDRAM                      0x40000000
-#define PHYS_SDRAM_SIZE			0x80000000 /* 2GB DDR */
+//#define PHYS_SDRAM_SIZE			0x80000000 /* 2GB DDR */
 
 // Mecha-Comet 4GB SOM Changes
-#define PHYS_SDRAM_SIZE			SZ_4G /* 4GB DDR */
+//#define PHYS_SDRAM_SIZE			SZ_4G /* 4GB DDR */
 
 #define CFG_FEC_MXC_PHYADDR          0
 
@@ -222,13 +217,12 @@
 #include "imx8mm_evk_android.h"
 #endif
 
-#endif
-
 // Mecha-Comet 4GB SOM Changes
 #define CONFIG_NR_DRAM_BANKS 3
 #ifdef CONFIG_IMX8M_4G_LPDDR4
-#undef PHYS_SDRAM_SIZE
 #define PHYS_SDRAM_SIZE          0xC0000000 /* 3GB */
 #define PHYS_SDRAM_2             0x100000000
 #define PHYS_SDRAM_2_SIZE        0x40000000 /* 1GB */
+#endif
+
 #endif
