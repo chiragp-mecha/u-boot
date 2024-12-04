@@ -316,6 +316,25 @@ int board_ehci_usb_phy_mode(struct udevice *dev)
 
 #endif
 
+static void setup_i2c_bq25890(uint8_t i2c_bus, uint8_t addr)
+{
+	int ret;
+	struct udevice *dev;
+	uint8_t buf[1] = { 0 };
+
+	if (ret = i2c_get_chip_for_busnum(i2c_bus, addr, 1, &dev))
+		return;
+
+	ret = dm_i2c_read(dev, 0, (void *)buf, sizeof(buf));
+	if (ret) {
+		printf("%s, read err %d\n", __func__, ret);
+		return;
+	}
+	/* Change REG0B for current limit*/
+	buf[0] |= 0x3f;		/* IINLIM = 0b111111 */
+	dm_i2c_write(dev, 0, (void *)buf, sizeof(buf));
+}
+
 int power_fg_i2c_init_update(uint8_t i2c_bus, uint8_t addr)
 {  printf("\nFuel-Gauge: Fuel-Gauge Configuration started ... \n");
 	struct udevice *i2c_dev;
@@ -362,6 +381,7 @@ void board_late_mmc_env_init(void)
 
 int show_boot_logo(void)
 {
+		printf("Display: boot logo");
 		run_command("mmc dev 2", 0);
 		run_command("mmc rescan", 0);
 		run_command("load mmc 2 ${loadaddr} splash/logo.bmp", 0);
@@ -401,6 +421,9 @@ int show_low_battery_logo(void)
 
 int board_init(void)
 {
+
+	setup_i2c_bq25890(0, 0x6a);
+
 #ifdef CONFIG_USB_TCPC
 	setup_typec();
 #endif
@@ -425,7 +448,7 @@ int board_late_init(void)
 #endif
 
 	// initialize fuel gauge
-	int ret = power_fg_i2c_init_update(2, 0x55);
+	int ret = power_fg_i2c_init_update(0, 0x55);
 	bool is_battery_below_threshold = false;
 
 	if (!(ret < 0)) {
