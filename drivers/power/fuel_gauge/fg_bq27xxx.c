@@ -9,8 +9,8 @@
 #define CONFIG_ENABLE 0
 
 BQ27xxx_device default_battery_config = {
-	.design_capacity	= 3000, /*mAh*/
-	.design_energy		= 11000,	/*design Capacity * 3.8f for G1B*/
+	.design_capacity	= 3200, /*mAh*/
+	.design_energy		= 11800,	/*design Capacity * 3.8f for G1B*/
 	.taper_rate		= 200,	/*mA*/
 	.terminate_voltage	= 3200,	/*mV*/
 	.wait_time		= 10	/*mSec*/

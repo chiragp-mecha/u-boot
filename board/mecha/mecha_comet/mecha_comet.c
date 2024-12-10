@@ -333,6 +333,7 @@ static void setup_i2c_bq25890(uint8_t i2c_bus, uint8_t addr)
 	/* Change REG0B for current limit*/
 	buf[0] |= 0x3f;		/* IINLIM = 0b111111 */
 	dm_i2c_write(dev, 0, (void *)buf, sizeof(buf));
+	printf("Setup i2c BQ25890 ...\n");
 }
 
 int power_fg_i2c_init_update(uint8_t i2c_bus, uint8_t addr)
